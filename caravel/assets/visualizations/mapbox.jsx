@@ -125,9 +125,7 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
                 pointLabel,
                 pointMetric = location.get("properties").get("metric");
 
-            if (pointMetric !== null) {
-              pointLabel = pointMetric;
-            } else if (radiusProperty !== null) {
+             if (radiusProperty !== null) {
               if (props.pointRadiusUnit === "Kilometers") {
                 pointLabel = d3.round(pointRadius, 2) + "km";
                 pointRadius = props.kmToPixels(pointRadius, props.latitude, props.zoom);
@@ -135,6 +133,10 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
                 pointLabel = d3.round(pointRadius, 2) + "mi";
                 pointRadius = props.kmToPixels(pointRadius * milesToKm, props.latitude, props.zoom);
               }
+            }
+
+            if (pointMetric !== null) {
+              pointLabel = pointMetric;
             }
 
             ctx.arc(pixelRounded[0], pixelRounded[1], d3.round(pointRadius, 1), 0, Math.PI * 2);
@@ -156,12 +158,16 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
 class MapboxViz extends React.Component {
   constructor(props) {
     super(props);
+
+    var longitude = this.props.viewportLongitude || -122.405293,
+        latitude = this.props.viewportLatitude || 37.772123;
+
     this.state = {
       viewport: {
-        longitude: -122.405293,
-        latitude: 37.772123,
-        zoom: 11,
-        startDragLngLat: [37.7577, -89.4376]
+        longitude: longitude,
+        latitude: latitude,
+        zoom: this.props.viewportZoom || 11,
+        startDragLngLat: [longitude, latitude]
       }
     };
 
@@ -187,6 +193,10 @@ class MapboxViz extends React.Component {
       bbox = [topLeft[0], bottomRight[1], bottomRight[0], topLeft[1]],
       clusters = this.props.clusterer.getClusters(bbox, Math.round(this.state.viewport.zoom));
 
+    d3.select("#viewport_longitude").attr("value", this.state.viewport.longitude);
+    d3.select("#viewport_latitude").attr("value", this.state.viewport.latitude);
+    d3.select("#viewport_zoom").attr("value", this.state.viewport.zoom);
+
     return (
       <MapGL
         {...this.state.viewport}
@@ -204,7 +214,7 @@ class MapboxViz extends React.Component {
           dotRadius={this.props.pointRadius}
           pointRadiusUnit={this.props.pointRadiusUnit}
           kmToPixels={this.props.kmToPixels}
-          globalOpacity={1}
+          globalOpacity={this.props.globalOpacity}
           compositeOperation={"screen"}
           renderWhileDragging={true}
           aggregatorName={this.props.aggregatorName}
@@ -279,13 +289,11 @@ function mapbox(slice) {
       div.selectAll("*").remove();
       ReactDOM.render(
         <MapboxViz
+          {...json.data}
           sliceHeight={slice.height()}
           sliceWidth={slice.width()}
           clusterer={clusterer}
-          mapStyle={json.data.mapStyle}
-          mapboxApiKey={json.data.mapboxApiKey}
           pointRadius={defaultPointRadius}
-          pointRadiusUnit={json.data.pointRadiusUnit}
           aggregatorName={aggName}
           kmToPixels={kmToPixels}/>,
         div.node()
