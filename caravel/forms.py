@@ -842,6 +842,30 @@ class FormFactory(object):
                 ]),
                 "description": _("The unit of measure for the specified point radius")
             }),
+            'global_opacity': (DecimalField, {
+                "label": _("Opacity"),
+                "default": 1,
+                "description": _("Opacity of all clusters, points, and labels. Between 0 and 1."),
+            }),
+            'viewport_zoom': (DecimalField, {
+                "label": _("Zoom"),
+                "default": 11,
+                "validators": [validators.optional()],
+                "description": _("Zoom level of the map"),
+                "places": 8,
+            }),
+            'viewport_latitude': (DecimalField, {
+                "label": _("Default latitude"),
+                "default": 37.772123,
+                "description": _("Latitude of default viewport"),
+                "places": 8,
+            }),
+            'viewport_longitude': (DecimalField, {
+                "label": _("Default longitude"),
+                "default": -122.405293,
+                "description": _("Longitude of default viewport"),
+                "places": 8,
+            }),
         }
 
         # Override default arguments with form overrides
