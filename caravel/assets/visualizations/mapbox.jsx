@@ -142,7 +142,7 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
             ctx.fill();
 
             if (pointLabel !== undefined) {
-              var fontHeight = d3.round(pointRadius * 0.5, 1);
+              var fontHeight = d3.round(pointRadius, 1);
               this._drawText(ctx, pixelRounded, fontHeight, pointLabel, pointRadius);
             }
           }
@@ -193,7 +193,7 @@ class MapboxViz extends React.Component {
         mapStyle={this.props.mapStyle}
         width={this.props.sliceWidth}
         height={this.props.sliceHeight}
-        mapboxApiAccessToken={""}
+        mapboxApiAccessToken={this.props.mapboxApiKey}
         onChangeViewport={this.onChangeViewport}>
         <ScatterPlotGlowOverlay
           {...this.state.viewport}
@@ -283,6 +283,7 @@ function mapbox(slice) {
           sliceWidth={slice.width()}
           clusterer={clusterer}
           mapStyle={json.data.mapStyle}
+          mapboxApiKey={json.data.mapboxApiKey}
           pointRadius={defaultPointRadius}
           pointRadiusUnit={json.data.pointRadiusUnit}
           aggregatorName={aggName}
