@@ -1768,6 +1768,7 @@ class MapboxViz(BaseViz):
             "customMetric": len(all_columns) >= 1,
             "clusteringRadius": fd.get("clustering_radius"),
             "pointRadiusUnit": fd.get("point_radius_unit"),
+            "mapboxApiKey": config.get('MAPBOX_API_KEY'),
         }
 
 
