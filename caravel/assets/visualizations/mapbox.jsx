@@ -136,7 +136,7 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
             }
 
             if (pointMetric !== null) {
-              pointLabel = pointMetric;
+              pointLabel = d3.round(pointMetric, 2);
             }
 
             ctx.arc(pixelRounded[0], pixelRounded[1], d3.round(pointRadius, 1), 0, Math.PI * 2);
