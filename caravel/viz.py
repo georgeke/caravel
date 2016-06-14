@@ -1669,6 +1669,7 @@ class MapboxViz(BaseViz):
         'fields': (
             ('all_columns_x', 'all_columns_y'),
             'clustering_radius',
+            'row_limit',
         )
     }, {
         'label': 'Points',
@@ -1726,7 +1727,7 @@ class MapboxViz(BaseViz):
         fd = self.form_data
         all_columns = fd.get('all_columns')
         d['columns'] = [fd.get('all_columns_x'), fd.get('all_columns_y')]
-        if len(all_columns) >= 1:
+        if all_columns and len(all_columns) >= 1:
             d['columns'].append(fd.get('all_columns')[0])
         if fd.get('point_radius') != 'Auto':
             d['columns'].append(fd.get('point_radius'))
@@ -1738,8 +1739,9 @@ class MapboxViz(BaseViz):
         df = self.get_df()
         fd = self.form_data
         all_columns = fd.get('all_columns')
+        custom_metric = all_columns and len(all_columns) >= 1
         metric_col = [None] * len(df.index)
-        if len(all_columns) >= 1:
+        if custom_metric:
             if all_columns[0] == fd.get('all_columns_x'):
                 metric_col = df[fd.get('all_columns_x')]
             elif all_columns[0] == fd.get('all_columns_y'):
@@ -1777,7 +1779,7 @@ class MapboxViz(BaseViz):
             "geoJSON": geo_json,
             "mapStyle": fd.get("mapbox_style"),
             "aggregatorName": fd.get("pandas_aggfunc"),
-            "customMetric": len(all_columns) >= 1,
+            "customMetric": custom_metric,
             "clusteringRadius": fd.get("clustering_radius"),
             "pointRadiusUnit": fd.get("point_radius_unit"),
             "mapboxApiKey": config.get('MAPBOX_API_KEY'),
