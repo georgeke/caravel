@@ -821,12 +821,12 @@ class FormFactory(object):
                 "description": _(
                     "The radius (in pixels) the algorithm uses to define a cluster. "
                     "Choose 0 to turn off clustering, but beware that a large "
-                    "number of points (>10000) will cause lag.")
+                    "number of points (>1000) will cause lag.")
             }),
             'point_radius': (SelectField, {
                 "label": _("Point Radius"),
                 "default": "Auto",
-                "choices": self.choicify(["Auto"] + datasource.column_names),
+                "choices": self.choicify(["Auto"] + datasource.numerical_column_names),
                 "description": _(
                     "The radius of individual points (ones that are not in a cluster). "
                     "Either a numerical column or 'Auto', which scales the point based "
@@ -865,6 +865,11 @@ class FormFactory(object):
                 "default": -122.405293,
                 "description": _("Longitude of default viewport"),
                 "places": 8,
+            }),
+            'render_while_dragging': (BetterBooleanField, {
+                "label": _("Live render"),
+                "default": True,
+                "description": _("Points and clusters will update as viewport is being changed")
             }),
         }
 

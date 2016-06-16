@@ -136,7 +136,7 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
             }
 
             if (pointMetric !== null) {
-              pointLabel = d3.round(pointMetric, 2);
+              pointLabel = this._isNumeric(pointMetric) ? d3.round(pointMetric, 2) : pointMetric;
             }
 
             ctx.arc(pixelRounded[0], pixelRounded[1], d3.round(pointRadius, 1), 0, Math.PI * 2);
@@ -207,7 +207,7 @@ class MapboxViz extends React.Component {
         onChangeViewport={this.onChangeViewport}>
         <ScatterPlotGlowOverlay
           {...this.state.viewport}
-          isDragging={false}
+          isDragging={this.state.viewport.isDragging !== undefined ? this.state.viewport.isDragging : false}
           width={this.props.sliceWidth}
           height={this.props.sliceHeight}
           locations={Immutable.fromJS(clusters)}
@@ -216,7 +216,7 @@ class MapboxViz extends React.Component {
           kmToPixels={this.props.kmToPixels}
           globalOpacity={this.props.globalOpacity}
           compositeOperation={"screen"}
-          renderWhileDragging={true}
+          renderWhileDragging={this.props.renderWhileDragging}
           aggregatorName={this.props.aggregatorName}
           lngLatAccessor={function (location) {
             const coordinates = location.get("geometry").get("coordinates");

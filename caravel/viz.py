@@ -30,7 +30,7 @@ from dateutil import relativedelta as rdelta
 
 from caravel import app, utils, cache
 from caravel.forms import FormFactory
-from caravel.utils import flasher
+from caravel.utils import flasher, column_is_numerical
 
 config = app.config
 
@@ -1670,6 +1670,8 @@ class MapboxViz(BaseViz):
             ('all_columns_x', 'all_columns_y'),
             'clustering_radius',
             'row_limit',
+            'groupby',
+            'render_while_dragging',
         )
     }, {
         'label': 'Points',
@@ -1709,30 +1711,40 @@ class MapboxViz(BaseViz):
         },
         'all_columns': {
             'label': 'Label',
-            'description': (
+            'description': _(
                 "Numerical columns will be aggregated with the aggregator. "
                 "Non-numerical columns will be used to label points."
                 "Leave empty to get a count of points in each cluster."),
         },
         'pandas_aggfunc': {
             'label': 'Cluster label aggregator',
-            'description': (
+            'description': _(
                 "Aggregate function applied to the list of points "
                 "in each cluster to produce the cluster label."),
         },
+        'rich_tooltip': {
+            'label': 'Tooltip',
+            'description': _(
+                "Show a tooltip when hovering over points and clusters "
+                "describing the label"),
+        }
     }
 
     def query_obj(self):
         d = super(MapboxViz, self).query_obj()
         fd = self.form_data
         all_columns = fd.get('all_columns')
-        d['columns'] = [fd.get('all_columns_x'), fd.get('all_columns_y')]
-        if all_columns and len(all_columns) >= 1:
-            d['columns'].append(fd.get('all_columns')[0])
-        if fd.get('point_radius') != 'Auto':
-            d['columns'].append(fd.get('point_radius'))
-        d['columns'] = list(set(d['columns']))
-        d['groupby'] = []
+
+        if not fd.get('groupby'):
+            d['columns'] = [fd.get('all_columns_x'), fd.get('all_columns_y')]
+
+            if all_columns and len(all_columns) >= 1:
+                d['columns'].append(fd.get('all_columns')[0])
+
+            if fd.get('point_radius') != 'Auto':
+                d['columns'].append(fd.get('point_radius'))
+
+            d['columns'] = list(set(d['columns']))
         return d
 
     def get_data(self):
@@ -1787,6 +1799,8 @@ class MapboxViz(BaseViz):
             "viewportLongitude": fd.get("viewport_longitude"),
             "viewportLatitude": fd.get("viewport_latitude"),
             "viewportZoom": fd.get("viewport_zoom"),
+            "renderWhileDragging": fd.get("render_while_dragging"),
+            "tooltip": fd.get("rich_tooltip"),
         }
 
 

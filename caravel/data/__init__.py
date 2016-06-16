@@ -1001,7 +1001,8 @@ def load_long_lat_data():
         "all_columns_x": "LON",
         "all_columns_y": "LAT",
         "mapbox_style": "mapbox://styles/mapbox/light-v9",
-        "all_columns": ["occupancy"]
+        "all_columns": ["occupancy"],
+        "row_limit": 500000,
     }
 
     print("Creating a slice")
