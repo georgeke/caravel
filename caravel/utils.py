@@ -316,3 +316,12 @@ def generic_find_constraint_name(table, columns, referenced, db):
                 fk.referred_table.name == referenced and
                 set(fk.column_keys) == columns):
             return fk.name
+
+def column_is_numerical(column):
+    """Checks whether a given column contains numberical data"""
+    t = column.type
+    numeric_types = ("INT", "FLOAT", "INTEGER", "BIGINT", "REAL", "NUMERIC", "SMALLINT")
+    for _t in numeric_types:
+        if t == _t:
+            return True
+    return False
