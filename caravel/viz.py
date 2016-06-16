@@ -1743,12 +1743,20 @@ class MapboxViz(BaseViz):
             d['columns'] = [fd.get('all_columns_x'), fd.get('all_columns_y')]
 
             if all_columns and len(all_columns) >= 1:
-                d['columns'].append(fd.get('all_columns')[0])
+                d['columns'].append(all_columns[0])
 
             if fd.get('point_radius') != 'Auto':
                 d['columns'].append(fd.get('point_radius'))
 
             d['columns'] = list(set(d['columns']))
+        else:
+            # the column used for labelling must be in the groupby
+            if all_columns and len(all_columns) >= 1 and all_columns[0] not in fd.get('groupby'):
+                raise Exception(
+                    "Choice of [Label] must be present in [Group By]")
+
+            d['groupby'] = [fd.get('all_columns_x'), fd.get('all_columns_y')] + fd.get('groupby')
+
         return d
 
     def get_data(self):
