@@ -826,7 +826,7 @@ class FormFactory(object):
             'point_radius': (SelectField, {
                 "label": _("Point Radius"),
                 "default": "Auto",
-                "choices": self.choicify(["Auto"] + datasource.numerical_column_names),
+                "choices": self.choicify(["Auto"] + datasource.column_names),
                 "description": _(
                     "The radius of individual points (ones that are not in a cluster). "
                     "Either a numerical column or 'Auto', which scales the point based "

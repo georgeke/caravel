@@ -120,8 +120,9 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
               this._drawText(ctx, pixelRounded, fontHeight, clusterLabel, scaledRadius);
             }
           } else {
-            var radiusProperty = location.get("properties").get("radius"),
-                pointRadius = radiusProperty === null ? radius / 6 : radiusProperty,
+            var defaultRadius = radius / 6,
+                radiusProperty = location.get("properties").get("radius"),
+                pointRadius = radiusProperty === null ? defaultRadius : radiusProperty,
                 pointLabel,
                 pointMetric = location.get("properties").get("metric");
 
@@ -137,6 +138,11 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
 
             if (pointMetric !== null) {
               pointLabel = this._isNumeric(pointMetric) ? d3.round(pointMetric, 2) : pointMetric;
+            }
+
+            // Fall back to default points if pointRadius wasn't a numerical column
+            if (!pointRadius) {
+              pointRadius = defaultRadius;
             }
 
             ctx.arc(pixelRounded[0], pixelRounded[1], d3.round(pointRadius, 1), 0, Math.PI * 2);

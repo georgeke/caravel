@@ -30,7 +30,7 @@ from dateutil import relativedelta as rdelta
 
 from caravel import app, utils, cache
 from caravel.forms import FormFactory
-from caravel.utils import flasher, column_is_numerical
+from caravel.utils import flasher
 
 config = app.config
 
