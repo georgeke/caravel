@@ -230,7 +230,8 @@ class MapboxViz extends React.Component {
 function kmToPixels(kilometers, latitude, zoomLevel) {
   // Algorithm from: http://wiki.openstreetmap.org/wiki/Zoom_levels
   var latitudeRad = latitude * (Math.PI / 180);
-  var kmPerPixel = earthCircumferenceKm * Math.cos(latitudeRad) / Math.pow(2, zoomLevel + 8);
+  // Seems like the zoomLevel is off by one
+  var kmPerPixel = earthCircumferenceKm * Math.cos(latitudeRad) / Math.pow(2, zoomLevel + 8 + 1);
   return d3.round(kilometers / kmPerPixel, 2);
 };
 
