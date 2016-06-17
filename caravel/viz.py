@@ -1682,7 +1682,7 @@ class MapboxViz(BaseViz):
     }, {
         'label': 'Labelling',
         'fields': (
-            'all_columns',
+            'mapbox_label',
             'pandas_aggfunc',
         )
     }, {
@@ -1709,13 +1709,6 @@ class MapboxViz(BaseViz):
             'label': 'Latitude',
             'description': "Column containing latitude data",
         },
-        'all_columns': {
-            'label': 'Label',
-            'description': _(
-                "Numerical columns will be aggregated with the aggregator. "
-                "Non-numerical columns will be used to label points."
-                "Leave empty to get a count of points in each cluster."),
-        },
         'pandas_aggfunc': {
             'label': 'Cluster label aggregator',
             'description': _(
@@ -1727,47 +1720,64 @@ class MapboxViz(BaseViz):
             'description': _(
                 "Show a tooltip when hovering over points and clusters "
                 "describing the label"),
-        }
+        },
+        'groupby': {
+            'description': _(
+                "One or many fields to group by. If grouping, latitude "
+                "and longitude columns must be present."),
+        },
     }
 
     def query_obj(self):
         d = super(MapboxViz, self).query_obj()
         fd = self.form_data
-        all_columns = fd.get('all_columns')
+        label_col = fd.get('mapbox_label')
 
         if not fd.get('groupby'):
             d['columns'] = [fd.get('all_columns_x'), fd.get('all_columns_y')]
 
-            if all_columns and len(all_columns) >= 1:
-                d['columns'].append(all_columns[0])
+            if label_col and len(label_col) >= 1:
+                if label_col[0] == "count":
+                    raise Exception(
+                        "Must have a [Group By] column to have 'count' as the [Label]")
+                d['columns'].append(label_col[0])
 
             if fd.get('point_radius') != 'Auto':
                 d['columns'].append(fd.get('point_radius'))
 
             d['columns'] = list(set(d['columns']))
         else:
-            # the column used for labelling must be in the groupby
-            if all_columns and len(all_columns) >= 1 and all_columns[0] not in fd.get('groupby'):
+            # Ensuring columns chosen are all in group by
+            if (label_col and len(label_col) >= 1
+                and label_col[0] != "count"
+                and label_col[0] not in fd.get('groupby')):
                 raise Exception(
                     "Choice of [Label] must be present in [Group By]")
 
-            d['groupby'] = [fd.get('all_columns_x'), fd.get('all_columns_y')] + fd.get('groupby')
+            if (fd.get("point_radius") != "Auto"
+                and fd.get("point_radius") not in fd.get('groupby')):
+                raise Exception(
+                    "Choice of [Point Radius] must be present in [Group By]")
 
+            if (fd.get('all_columns_x') not in fd.get('groupby') or
+                fd.get('all_columns_y') not in fd.get('groupby')):
+                raise Exception(
+                    "[Longitude] and [Latitude] columns must be present in [Group By]")
         return d
 
     def get_data(self):
         df = self.get_df()
         fd = self.form_data
-        all_columns = fd.get('all_columns')
-        custom_metric = all_columns and len(all_columns) >= 1
+        label_col = fd.get('mapbox_label')
+        custom_metric = label_col and len(label_col) >= 1
         metric_col = [None] * len(df.index)
         if custom_metric:
-            if all_columns[0] == fd.get('all_columns_x'):
+            if label_col[0] == fd.get('all_columns_x'):
                 metric_col = df[fd.get('all_columns_x')]
-            elif all_columns[0] == fd.get('all_columns_y'):
+            elif label_col[0] == fd.get('all_columns_y'):
                 metric_col = df[fd.get('all_columns_y')]
             else:
-                metric_col = df[fd.get('all_columns')[0]]
+                metric_col = df[label_col[0]]
         point_radius_col = ([None] * len(df.index)
                              if fd.get("point_radius") == "Auto"
                              else df[fd.get("point_radius")])
