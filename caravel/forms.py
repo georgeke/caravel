@@ -792,6 +792,15 @@ class FormFactory(object):
                     "Description text that shows up below your Big "
                     "Number")
             }),
+            'mapbox_label': (SelectMultipleSortableField, {
+                "label": "Label",
+                "choices": self.choicify(["count"] + datasource.column_names),
+                "description": _(
+                    "'count' is COUNT(*) if a group by is used. "
+                    "Numerical columns will be aggregated with the aggregator. "
+                    "Non-numerical columns will be used to label points. "
+                    "Leave empty to get a count of points in each cluster."),
+            }),
             'mapbox_style': (SelectField, {
                 "label": "Map Style",
                 "choices": [
