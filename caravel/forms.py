@@ -880,6 +880,19 @@ class FormFactory(object):
                 "default": True,
                 "description": _("Points and clusters will update as viewport is being changed")
             }),
+            'mapbox_color': (FreeFormSelectField, {
+                "label": _("RGB Color"),
+                "default": "rgb(0, 122, 135)",
+                "choices": [
+                    ("rgb(0, 139, 139)", "Dark Cyan"),
+                    ("rgb(128, 0, 128)", "Purple"),
+                    ("rgb(255, 215, 0)", "Gold"),
+                    ("rgb(69, 69, 69)", "Dim Gray"),
+                    ("rgb(220, 20, 60)", "Crimson"),
+                    ("rgb(34, 139, 34)", "Forest Green"),
+                ],
+                "description": _("The color for points and clusters in RGB")
+            }),
         }
 
         # Override default arguments with form overrides

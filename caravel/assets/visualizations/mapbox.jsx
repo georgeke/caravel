@@ -20,14 +20,20 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
     return !isNaN(parseFloat(num)) && isFinite(num);
   }
 
-  _drawText(ctx, pixel, fontHeight, label, radius) {
+  _drawText(ctx, pixel, fontHeight, label, radius, rgb, shadow) {
     var maxWidth = radius * 2 * 0.9;
+    // Formula: https://en.wikipedia.org/wiki/Relative_luminance
+    var luminance = 0.2126*rgb[1] + 0.7152*rgb[2] + 0.0722*rgb[3];
 
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = "black";
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = luminance <= 110 ? "white" : "black";
     ctx.font = fontHeight + "px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    if (shadow) {
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = luminance <= 110 ? "black" : "";
+    }
 
     var textWidth = ctx.measureText(label).width;
     if (textWidth > maxWidth) {
@@ -42,6 +48,8 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
       pixel[1]
     );
     ctx.globalCompositeOperation = this.props.compositeOperation;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "";
   }
 
   // Modified from https://github.com/uber/react-map-gl/blob/master/src/overlays/scatterplot.react.js
@@ -86,6 +94,7 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
         clusterLabelMap[i] = clusterLabel;
       }
     }, this);
+    var rgb = props.rgb;
 
     if ((this.props.renderWhileDragging || !this.props.isDragging) && this.props.locations) {
       this.props.locations.forEach(function _forEach(location, i) {
@@ -109,15 +118,15 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
                 );
 
             ctx.arc(pixelRounded[0], pixelRounded[1], scaledRadius, 0, Math.PI * 2);
-            gradient.addColorStop(1, "rgba(0, 122, 135, 0.8)");
-            gradient.addColorStop(0, "rgba(0, 122, 135, 0)");
+            gradient.addColorStop(1, "rgba(" + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ", 0.8)");
+            gradient.addColorStop(0, "rgba(" + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ", 0)");
             ctx.fillStyle = gradient;
             ctx.fill();
 
             if (this._isNumeric(clusterLabel)) {
               clusterLabel = clusterLabel >= 10000 ? Math.round(clusterLabel / 1000) + 'k' :
                              clusterLabel >= 1000 ? (Math.round(clusterLabel / 100) / 10) + 'k' : clusterLabel;
-              this._drawText(ctx, pixelRounded, fontHeight, clusterLabel, scaledRadius);
+              this._drawText(ctx, pixelRounded, fontHeight, clusterLabel, scaledRadius, rgb, true);
             }
           } else {
             var defaultRadius = radius / 6,
@@ -146,12 +155,12 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
             }
 
             ctx.arc(pixelRounded[0], pixelRounded[1], d3.round(pointRadius, 1), 0, Math.PI * 2);
-            ctx.fillStyle = "rgb(0, 122, 135)";
+            ctx.fillStyle = "rgb(" + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ")";
             ctx.fill();
 
             if (pointLabel !== undefined) {
               var fontHeight = d3.round(pointRadius, 1);
-              this._drawText(ctx, pixelRounded, fontHeight, pointLabel, pointRadius);
+              this._drawText(ctx, pixelRounded, fontHeight, pointLabel, pointRadius, rgb, false);
             }
           }
         }
@@ -220,6 +229,7 @@ class MapboxViz extends React.Component {
           dotRadius={this.props.pointRadius}
           pointRadiusUnit={this.props.pointRadiusUnit}
           kmToPixels={this.props.kmToPixels}
+          rgb={this.props.rgb}
           globalOpacity={this.props.globalOpacity}
           compositeOperation={"screen"}
           renderWhileDragging={this.props.renderWhileDragging}
@@ -253,6 +263,12 @@ function mapbox(slice) {
       if (error !== null) {
         slice.error(error.responseText);
         return "";
+      }
+
+      // Validate mapbox color
+      var rgb = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/.exec(json.data.color);
+      if (rgb === null) {
+        slice.error("Color field must be of form 'rgb(%d, %d, %d)'");
       }
 
       var reducer,
@@ -297,6 +313,7 @@ function mapbox(slice) {
       ReactDOM.render(
         <MapboxViz
           {...json.data}
+          rgb={rgb}
           sliceHeight={slice.height()}
           sliceWidth={slice.width()}
           clusterer={clusterer}
