@@ -31,7 +31,7 @@ class ScatterPlotGlowOverlay extends ScatterPlotOverlay {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     if (shadow) {
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 15;
       ctx.shadowColor = luminance <= 110 ? "black" : "";
     }
 
@@ -269,6 +269,7 @@ function mapbox(slice) {
       var rgb = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/.exec(json.data.color);
       if (rgb === null) {
         slice.error("Color field must be of form 'rgb(%d, %d, %d)'");
+        return "";
       }
 
       var reducer,
@@ -331,6 +332,6 @@ function mapbox(slice) {
     render: render,
     resize: function () {}
   };
-}
+};
 
 module.exports = mapbox;
