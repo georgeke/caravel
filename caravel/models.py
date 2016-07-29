@@ -767,10 +767,9 @@ class SqlaTable(Model, Queryable, AuditMixinNullable):
             qry.compile(
                 engine, compile_kwargs={"literal_binds": True},),
             )
-
-
         conn = engine.connect()
 
+        # TODO:: Move this, and other db-based maps into a central place
         cancel_func = lambda conn: conn.cancel()
         cancel_map = {
             # https://pypi.python.org/pypi/PyHive

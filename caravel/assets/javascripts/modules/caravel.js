@@ -241,7 +241,6 @@ const px = function () {
       })
     .tooltip();
   }
-
   const Slice = function (data, dashboard) {
     let timer;
     const token = $('#' + data.token);
@@ -250,8 +249,8 @@ const px = function () {
     const container = $(selector);
     const sliceId = data.sliceId;
     let dttm = 0;
-    // Keeps track of queries currently running with the key being jsonEndpoint
-    let queryMap = {};
+    // Counts the number of abandoned queries for a given jsonEndpoint
+    const abandonmentCountMap = {};
     const stopwatch = function () {
       dttm += 10;
       const num = dttm / 1000;
@@ -373,10 +372,10 @@ const px = function () {
         }
         return msg;
       },
-      abandon: function () {
+      abandon() {
         // Allow current query to timeout and reset UI so that another can be ran
         clearInterval(timer);
-        token.find("img.loading").hide();
+        token.find('img.loading').hide();
         $('#timer').removeClass('btn-warning');
         $('#timer').addClass('btn-success');
         $('span.view_query').removeClass('disabled');
@@ -384,22 +383,24 @@ const px = function () {
         $('.query-and-save button').removeAttr('disabled');
         after(data);
 
-        queryMap[this.jsonEndpoint()] = {
-          abandoned: true
-        };
+        if (abandonmentCountMap[this.jsonEndpoint()]) {
+          abandonmentCountMap[this.jsonEndpoint()] += 1;
+        } else {
+          abandonmentCountMap[this.jsonEndpoint()] = 1;
+        }
 
-        container.html('<div class="alert alert-info">' + 'Query cancelled' + '</div>');
+        container.html('<div class="alert alert-info">Query cancelled</div>');
         container.show();
       },
-      error: function (msg, xhr, jsonEndpoint) {
+      error(msg, xhr, jsonEndpoint) {
         // No need to handle error if it timed out after abandoning a query
-        if (queryMap[jsonEndpoint] && queryMap[jsonEndpoint].abandoned) {
-          queryMap[jsonEndpoint].abandoned = false;
+        if (abandonmentCountMap[jsonEndpoint] >= 0) {
+          abandonmentCountMap[jsonEndpoint] -= 1;
           return;
         }
 
-        token.find("img.loading").hide();
-        let err = msg ? ('<div class="alert alert-danger">' + msg + '</div>') : "";
+        token.find('img.loading').hide();
+        let err = msg ? ('<div class="alert alert-danger">' + msg + '</div>') : '';
         if (xhr) {
           const extendedMsg = this.getErrorMsg(xhr);
           if (extendedMsg) {
