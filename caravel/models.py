@@ -8,6 +8,7 @@ import functools
 import json
 import logging
 import textwrap
+import atexit
 from collections import namedtuple
 from copy import deepcopy, copy
 from datetime import timedelta, datetime, date
@@ -766,10 +767,39 @@ class SqlaTable(Model, Queryable, AuditMixinNullable):
             qry.compile(
                 engine, compile_kwargs={"literal_binds": True},),
             )
+
+
+        conn = engine.connect()
+
+        cancel_func = lambda conn: conn.cancel()
+        cancel_map = {
+            # https://pypi.python.org/pypi/PyHive
+            'presto': cancel_func,
+            'mysql': cancel_func,
+            # https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.interrupt
+            'sqlite': lambda conn: conn.interrupt(),
+            # http://pythonhosted.org/psycopg2/connection.html?highlight=cancel#connection.cancel
+            'postgresql': cancel_func,
+            'redshift': cancel_func,
+            'vertica': cancel_func,
+        }
+
+        def get_cancel_func(uri):
+            for db_type, func in cancel_map.items():
+                if uri.startswith(db_type):
+                    return cancel_map[db_type]
+
+        def cleanup_conn(conn, uri):
+            get_cancel_func(uri)(conn.connection)
+            conn.close()
+
+        atexit.register(cleanup_conn, conn=conn, uri=self.database.sqlalchemy_uri)
+
         df = pd.read_sql_query(
             sql=sql,
-            con=engine
+            con=conn
         )
+
         sql = sqlparse.format(sql, reindent=True)
         return QueryResult(
             df=df, duration=datetime.now() - qry_start_dttm, query=sql)

@@ -65,6 +65,7 @@ function query(force, pushState) {
   }
   $('.query-and-save button').attr('disabled', 'disabled');
   $('.btn-group.results span,a').attr('disabled', 'disabled');
+  $("#cancel_query").removeAttr('disabled');
   if (force) {  // Don't hide the alert message when the page is just loaded
     $('div.alert').remove();
   }
@@ -263,6 +264,11 @@ function initExploreView() {
     var url = $(this).find('option:selected').attr('url');
     window.location = url;
   });
+
+  $("#cancel_query").click(function () {
+    slice.abandon();
+    $("#cancel_query").attr('disabled', 'disabled');
+  })
 
   var collapsed_fieldsets = get_collapsed_fieldsets();
   for (var i = 0; i < collapsed_fieldsets.length; i++) {

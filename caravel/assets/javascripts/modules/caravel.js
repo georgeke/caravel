@@ -241,6 +241,7 @@ const px = function () {
       })
     .tooltip();
   }
+
   const Slice = function (data, dashboard) {
     let timer;
     const token = $('#' + data.token);
@@ -249,13 +250,15 @@ const px = function () {
     const container = $(selector);
     const sliceId = data.sliceId;
     let dttm = 0;
+    // Keeps track of queries currently running with the key being jsonEndpoint
+    let queryMap = {};
     const stopwatch = function () {
       dttm += 10;
       const num = dttm / 1000;
       $('#timer').text(num.toFixed(2) + ' sec');
     };
     let qrystr = '';
-    const always = function () {
+    const after = function () {
       // Private f, runs after done and error
       clearInterval(timer);
       $('#timer').removeClass('btn-warning');
@@ -353,7 +356,7 @@ const px = function () {
         });
         $('.btn-group.results span,a').removeAttr('disabled');
         $('.query-and-save button').removeAttr('disabled');
-        always(data);
+        after(data);
       },
       getErrorMsg(xhr) {
         if (xhr.statusText === 'timeout') {
@@ -370,9 +373,33 @@ const px = function () {
         }
         return msg;
       },
-      error(msg, xhr) {
-        token.find('img.loading').hide();
-        let err = msg ? '<div class="alert alert-danger">' + msg + '</div>' : '';
+      abandon: function () {
+        // Allow current query to timeout and reset UI so that another can be ran
+        clearInterval(timer);
+        token.find("img.loading").hide();
+        $('#timer').removeClass('btn-warning');
+        $('#timer').addClass('btn-success');
+        $('span.view_query').removeClass('disabled');
+        $('.btn-group.results span,a').removeAttr('disabled');
+        $('.query-and-save button').removeAttr('disabled');
+        after(data);
+
+        queryMap[this.jsonEndpoint()] = {
+          abandoned: true
+        };
+
+        container.html('<div class="alert alert-info">' + 'Query cancelled' + '</div>');
+        container.show();
+      },
+      error: function (msg, xhr, jsonEndpoint) {
+        // No need to handle error if it timed out after abandoning a query
+        if (queryMap[jsonEndpoint] && queryMap[jsonEndpoint].abandoned) {
+          queryMap[jsonEndpoint].abandoned = false;
+          return;
+        }
+
+        token.find("img.loading").hide();
+        let err = msg ? ('<div class="alert alert-danger">' + msg + '</div>') : "";
         if (xhr) {
           const extendedMsg = this.getErrorMsg(xhr);
           if (extendedMsg) {
@@ -385,7 +412,7 @@ const px = function () {
         $('#timer').addClass('btn-danger');
         $('.btn-group.results span,a').removeAttr('disabled');
         $('.query-and-save button').removeAttr('disabled');
-        always(data);
+        after(data);
       },
       width() {
         return token.width();

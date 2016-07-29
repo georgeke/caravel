@@ -84,6 +84,13 @@
                 {{ _("0 sec") }}
               </span>
               <span
+                  class="btn btn-warning disabled"
+                  id="cancel_query"
+                  title="{{ _("Cancel running query") }}"
+                  data-toggle="tooltip">
+                  {{ _("cancel") }}
+              </span>
+              <span
                   class="btn btn-info disabled view_query"
                   data-toggle="modal"
                   data-target="#query_modal">
